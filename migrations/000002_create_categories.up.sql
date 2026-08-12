@@ -3,5 +3,7 @@ CREATE TABLE categories (
     user_id BIGINT REFERENCES users(id) NOT NULL,
     name VARCHAR(100) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL,
+    
+    UNIQUE (user_id, id),
     UNIQUE (user_id, name)
 );
