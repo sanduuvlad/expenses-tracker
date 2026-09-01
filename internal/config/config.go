@@ -29,8 +29,11 @@ type DatabaseConfig struct {
 }
 
 func Load() (Config, error) {
-	if err := godotenv.Load(); err != nil {
-		return Config{}, fmt.Errorf("load .env: %w", err)
+	err := godotenv.Load()
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return Config{}, fmt.Errorf("load .env: %w", err)
+		}
 	}
 
 	serverPortStr, err := getEnv("SERVER_PORT")
