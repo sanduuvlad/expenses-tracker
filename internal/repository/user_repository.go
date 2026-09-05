@@ -1,25 +1,27 @@
 package repository
 
 import (
-	"database/sql"
+	"context"
 	"expense-tracker/internal/models"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Repository struct {
-	db *sql.DB
+type UserRepository struct {
+	pool *pgxpool.Pool
 }
 
-func NewRepository(db *sql.DB) *Repository {
-	return &Repository{
-		db: db,
+func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
+	return &UserRepository{
+		pool: pool,
 	}
 }
 
-func (r *Repository) GetAllUsers() ([]models.User, error) {
-	rows, err := r.db.Query(`
-		SELECT id, email, password_hash, created_at, updated_at
-		FROM users
-	`)
+func (r *UserRepository) GetAllUsers() ([]models.User, error) {
+	rows, err := r.pool.Query(context.Background(),
+		`SELECT id, email, password_hash, created_at, updated_at
+		FROM users`,
+	)
 	if err != nil {
 		return nil, err
 	}

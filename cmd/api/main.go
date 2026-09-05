@@ -27,23 +27,27 @@ func main() {
 		cfg.Database.Name,
 	)
 
-	db, err := database.Open(dsn)
+	pool, err := database.Connect(dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer pool.Close()
 
-	defer db.Close()
+	// Repository
+	userRepo := repository.NewUserRepository(pool)
 
-	repo := repository.NewRepository(db)
+	// Service
+	userService := service.NewUserService(userRepo)
 
-	userService := service.NewUserService(repo)
+	// Handler
+	userHandler := handler.NewUserHandler(userService)
 
-	handler := handler.NewHandler(userService)
-
+	// Router
 	router := gin.Default()
 
-	router.GET("/users", handler.GetAllUsers)
+	router.GET("/users", userHandler.GetAllUsers)
 
+	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)
 
 	if err := router.Run(address); err != nil {
