@@ -3,8 +3,13 @@ package main
 import (
 	"expense-tracker/internal/config"
 	"expense-tracker/internal/database"
+	"expense-tracker/internal/handler"
+	"expense-tracker/internal/repository"
+	"expense-tracker/internal/service"
 	"fmt"
 	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -28,4 +33,20 @@ func main() {
 	}
 
 	defer db.Close()
+
+	repo := repository.NewRepository(db)
+
+	userService := service.NewUserService(repo)
+
+	handler := handler.NewHandler(userService)
+
+	router := gin.Default()
+
+	router.GET("/users", handler.GetAllUsers)
+
+	address := fmt.Sprintf(":%d", cfg.Server.Port)
+
+	if err := router.Run(address); err != nil {
+		log.Fatal(err)
+	}
 }
