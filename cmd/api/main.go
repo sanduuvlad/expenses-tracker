@@ -46,6 +46,7 @@ func main() {
 	router := gin.Default()
 
 	router.GET("/users", userHandler.GetAllUsers)
+	router.GET("/users/:id", userHandler.GetUserByID)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)

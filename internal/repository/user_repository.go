@@ -53,3 +53,28 @@ func (r *UserRepository) GetAllUsers() ([]models.User, error) {
 
 	return users, nil
 }
+
+func (r *UserRepository) GetUserByID(id int64) (models.User, error) {
+	row := r.pool.QueryRow(
+		context.Background(),
+		`SELECT id, email, password_hash, created_at, updated_at
+        FROM users
+        WHERE id = $1`,
+		id,
+	)
+
+	var user models.User
+
+	err := row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}

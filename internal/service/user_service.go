@@ -7,6 +7,7 @@ import (
 
 type UserRepository interface {
 	GetAllUsers() ([]models.User, error)
+	GetUserByID(id int64) (models.User, error)
 }
 
 type UserService struct {
@@ -39,4 +40,20 @@ func (s *UserService) GetAllUsers() ([]dto.UserResponse, error) {
 	}
 
 	return usersDTO, nil
+}
+
+func (s *UserService) GetUserByID(id int64) (dto.UserResponse, error) {
+	user, err := s.repo.GetUserByID(id)
+	if err != nil {
+		return dto.UserResponse{}, err
+	}
+
+	userResponseDTO := dto.UserResponse{
+		ID:        user.ID,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	return userResponseDTO, nil
 }
