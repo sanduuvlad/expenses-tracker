@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"expense-tracker/internal/dto"
 	"expense-tracker/internal/service"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -44,4 +46,26 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, userDTO)
+}
+
+func (h *UserHandler) RegisterUser(c *gin.Context) {
+	var userRequest dto.RegisterUserRequest
+
+	err := c.ShouldBindJSON(&userRequest)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
+		return
+	}
+
+	userResponseDTO, err := h.service.RegisterUser(
+		userRequest.Email,
+		userRequest.Password,
+	)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, userResponseDTO)
 }

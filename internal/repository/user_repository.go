@@ -78,3 +78,28 @@ func (r *UserRepository) GetUserByID(id int64) (models.User, error) {
 
 	return user, nil
 }
+
+func (r *UserRepository) CreateUser(email string, passwordHash string) (models.User, error) {
+	row := r.pool.QueryRow(
+		context.Background(),
+		`INSERT INTO users (email, password_hash)
+		VALUES ($1, $2)
+		RETURNING id, email, created_at, updated_at`,
+		email,
+		passwordHash,
+	)
+
+	var user models.User
+
+	err := row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}

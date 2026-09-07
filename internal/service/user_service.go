@@ -3,11 +3,14 @@ package service
 import (
 	"expense-tracker/internal/dto"
 	"expense-tracker/internal/models"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserRepository interface {
 	GetAllUsers() ([]models.User, error)
 	GetUserByID(id int64) (models.User, error)
+	CreateUser(email string, passwordHash string) (models.User, error)
 }
 
 type UserService struct {
@@ -44,6 +47,30 @@ func (s *UserService) GetAllUsers() ([]dto.UserResponse, error) {
 
 func (s *UserService) GetUserByID(id int64) (dto.UserResponse, error) {
 	user, err := s.repo.GetUserByID(id)
+	if err != nil {
+		return dto.UserResponse{}, err
+	}
+
+	userResponseDTO := dto.UserResponse{
+		ID:        user.ID,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	return userResponseDTO, nil
+}
+
+func (s *UserService) RegisterUser(email, password string) (dto.UserResponse, error) {
+	passwordHash, err := bcrypt.GenerateFromPassword(
+		[]byte(password),
+		bcrypt.DefaultCost,
+	)
+	if err != nil {
+		return dto.UserResponse{}, err
+	}
+
+	user, err := s.repo.CreateUser(email, string(passwordHash))
 	if err != nil {
 		return dto.UserResponse{}, err
 	}

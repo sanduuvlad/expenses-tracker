@@ -47,6 +47,7 @@ func main() {
 
 	router.GET("/users", userHandler.GetAllUsers)
 	router.GET("/users/:id", userHandler.GetUserByID)
+	router.POST("/users", userHandler.RegisterUser)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)
