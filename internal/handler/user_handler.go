@@ -69,3 +69,21 @@ func (h *UserHandler) RegisterUser(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, userResponseDTO)
 }
+
+func (h *UserHandler) LoginUser(c *gin.Context) {
+	var loginRequest dto.LoginUserRequest
+
+	err := c.ShouldBindJSON(&loginRequest)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request"})
+		return
+	}
+
+	userResponseDTO, err := h.service.LoginUser(loginRequest.Email, loginRequest.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, userResponseDTO)
+}

@@ -11,6 +11,7 @@ type UserRepository interface {
 	GetAllUsers() ([]models.User, error)
 	GetUserByID(id int64) (models.User, error)
 	CreateUser(email string, passwordHash string) (models.User, error)
+	GetUserByEmail(email string) (models.User, error)
 }
 
 type UserService struct {
@@ -83,4 +84,27 @@ func (s *UserService) RegisterUser(email, password string) (dto.UserResponse, er
 	}
 
 	return userResponseDTO, nil
+}
+
+func (s *UserService) LoginUser(email, password string) (dto.UserResponse, error) {
+	user, err := s.repo.GetUserByEmail(email)
+	if err != nil {
+		return dto.UserResponse{}, err
+	}
+
+	if err := bcrypt.CompareHashAndPassword(
+		[]byte(user.PasswordHash),
+		[]byte(password),
+	); err != nil {
+		return dto.UserResponse{}, err
+	}
+
+	userResponse := dto.UserResponse{
+		ID:        user.ID,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	return userResponse, nil
 }

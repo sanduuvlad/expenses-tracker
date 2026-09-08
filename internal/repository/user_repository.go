@@ -103,3 +103,28 @@ func (r *UserRepository) CreateUser(email string, passwordHash string) (models.U
 
 	return user, nil
 }
+
+func (r *UserRepository) GetUserByEmail(email string) (models.User, error) {
+	row := r.pool.QueryRow(
+		context.Background(),
+		`SELECT id, email, password_hash, created_at, updated_at
+		FROM users
+		WHERE email = $1`,
+		email,
+	)
+
+	var user models.User
+
+	err := row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}
