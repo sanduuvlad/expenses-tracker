@@ -5,7 +5,6 @@ import (
 	"expense-tracker/internal/apperrors"
 	"expense-tracker/internal/dto"
 	"expense-tracker/internal/service"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -60,7 +59,7 @@ func (h *UserHandler) RegisterUser(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&userRequest)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
@@ -69,8 +68,12 @@ func (h *UserHandler) RegisterUser(c *gin.Context) {
 		userRequest.Password,
 	)
 	if err != nil {
-		fmt.Println(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		if errors.Is(err, apperrors.ErrEmailAlreadyExists) {
+			c.JSON(http.StatusConflict, gin.H{"error": "user with this email already exists"})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 

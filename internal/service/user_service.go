@@ -7,6 +7,7 @@ import (
 	"expense-tracker/internal/models"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -80,6 +81,14 @@ func (s *UserService) RegisterUser(email, password string) (dto.UserResponse, er
 
 	user, err := s.repo.CreateUser(email, string(passwordHash))
 	if err != nil {
+		var pgErr *pgconn.PgError
+
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return dto.UserResponse{}, apperrors.ErrEmailAlreadyExists
+			}
+		}
+
 		return dto.UserResponse{}, err
 	}
 
