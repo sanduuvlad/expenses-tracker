@@ -52,6 +52,10 @@ func (s *UserService) GetAllUsers() ([]dto.UserResponse, error) {
 func (s *UserService) GetUserByID(id int64) (dto.UserResponse, error) {
 	user, err := s.repo.GetUserByID(id)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return dto.UserResponse{}, apperrors.ErrUserNotFound
+		}
+
 		return dto.UserResponse{}, err
 	}
 
