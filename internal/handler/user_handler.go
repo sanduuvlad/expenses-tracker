@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+	"expense-tracker/internal/apperrors"
 	"expense-tracker/internal/dto"
 	"expense-tracker/internal/service"
 	"fmt"
@@ -75,13 +77,18 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&loginRequest)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
 	userResponseDTO, err := h.service.LoginUser(loginRequest.Email, loginRequest.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		if errors.Is(err, apperrors.ErrInvalidCredentials) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 

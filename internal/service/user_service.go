@@ -1,9 +1,12 @@
 package service
 
 import (
+	"errors"
+	"expense-tracker/internal/apperrors"
 	"expense-tracker/internal/dto"
 	"expense-tracker/internal/models"
 
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -89,6 +92,10 @@ func (s *UserService) RegisterUser(email, password string) (dto.UserResponse, er
 func (s *UserService) LoginUser(email, password string) (dto.UserResponse, error) {
 	user, err := s.repo.GetUserByEmail(email)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return dto.UserResponse{}, apperrors.ErrInvalidCredentials
+		}
+
 		return dto.UserResponse{}, err
 	}
 
@@ -96,6 +103,10 @@ func (s *UserService) LoginUser(email, password string) (dto.UserResponse, error
 		[]byte(user.PasswordHash),
 		[]byte(password),
 	); err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return dto.UserResponse{}, apperrors.ErrInvalidCredentials
+		}
+
 		return dto.UserResponse{}, err
 	}
 
