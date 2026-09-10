@@ -33,6 +33,7 @@ func TestLoad(t *testing.T) {
 	t.Setenv("DB_USER", "expense_user")
 	t.Setenv("DB_PASSWORD", "test_password")
 	t.Setenv("DB_NAME", "expense_tracker")
+	t.Setenv("JWT_SECRET", "test_secret")
 
 	cfg, err := Load()
 	if err != nil {
@@ -84,6 +85,12 @@ func TestLoad(t *testing.T) {
 			name: "database name",
 			got:  cfg.Database.Name,
 			want: "expense_tracker",
+		},
+
+		{
+			name: "jwt secret",
+			got:  cfg.JWT.Secret,
+			want: "test_secret",
 		},
 	}
 

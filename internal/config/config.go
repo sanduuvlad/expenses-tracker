@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
+	JWT      JWTConfig
 }
 
 // ServerConfig contains HTTP server settings
@@ -26,6 +27,10 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	Name     string
+}
+
+type JWTConfig struct {
+	Secret string
 }
 
 func Load() (Config, error) {
@@ -75,6 +80,11 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 
+	jwtSecret, err := getEnv("JWT_SECRET")
+	if err != nil {
+		return Config{}, err
+	}
+
 	return Config{
 		Server: ServerConfig{
 			Port: port,
@@ -85,6 +95,9 @@ func Load() (Config, error) {
 			User:     user,
 			Password: password,
 			Name:     name,
+		},
+		JWT: JWTConfig{
+			Secret: jwtSecret,
 		},
 	}, nil
 }
