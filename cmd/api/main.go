@@ -4,8 +4,10 @@ import (
 	"expense-tracker/internal/config"
 	"expense-tracker/internal/database"
 	"expense-tracker/internal/handler"
+	"expense-tracker/internal/middleware"
 	"expense-tracker/internal/repository"
 	"expense-tracker/internal/service"
+	"expense-tracker/internal/token"
 	"fmt"
 	"log"
 
@@ -33,14 +35,20 @@ func main() {
 	}
 	defer pool.Close()
 
+	// JWT Token
+	tokenManager := token.NewTokenManager(cfg.JWT.Secret)
+
 	// Repository
 	userRepo := repository.NewUserRepository(pool)
+	categoryRepo := repository.NewCategoryRepository(pool)
 
 	// Service
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, tokenManager)
+	categoryService := service.NewCategoryService(categoryRepo)
 
 	// Handler
 	userHandler := handler.NewUserHandler(userService)
+	categoryHandler := handler.NewCategoryHandler(categoryService)
 
 	// Router
 	router := gin.Default()
@@ -49,6 +57,13 @@ func main() {
 	router.GET("/users/:id", userHandler.GetUserByID)
 	router.POST("/users", userHandler.RegisterUser)
 	router.POST("/login", userHandler.LoginUser)
+
+	// Auth
+	authorized := router.Group("/")
+	authorized.Use(middleware.AuthMiddleware(tokenManager))
+
+	// AuthRouter
+	authorized.POST("/categories", categoryHandler.CreateCategory)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)

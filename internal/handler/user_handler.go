@@ -89,7 +89,7 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	userResponseDTO, err := h.service.LoginUser(loginRequest.Email, loginRequest.Password)
+	loginResponseDTO, err := h.service.LoginUser(loginRequest.Email, loginRequest.Password)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrInvalidCredentials) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
@@ -100,5 +100,5 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, userResponseDTO)
+	c.JSON(http.StatusOK, loginResponseDTO)
 }

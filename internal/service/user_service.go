@@ -5,6 +5,7 @@ import (
 	"expense-tracker/internal/apperrors"
 	"expense-tracker/internal/dto"
 	"expense-tracker/internal/models"
+	"expense-tracker/internal/token"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -19,12 +20,14 @@ type UserRepository interface {
 }
 
 type UserService struct {
-	repo UserRepository
+	repo         UserRepository
+	tokenManager *token.TokenManager
 }
 
-func NewUserService(repo UserRepository) *UserService {
+func NewUserService(repo UserRepository, tokenManager *token.TokenManager) *UserService {
 	return &UserService{
-		repo: repo,
+		repo:         repo,
+		tokenManager: tokenManager,
 	}
 }
 
@@ -102,14 +105,14 @@ func (s *UserService) RegisterUser(email, password string) (dto.UserResponse, er
 	return userResponseDTO, nil
 }
 
-func (s *UserService) LoginUser(email, password string) (dto.UserResponse, error) {
+func (s *UserService) LoginUser(email, password string) (dto.LoginUserResponse, error) {
 	user, err := s.repo.GetUserByEmail(email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return dto.UserResponse{}, apperrors.ErrInvalidCredentials
+			return dto.LoginUserResponse{}, apperrors.ErrInvalidCredentials
 		}
 
-		return dto.UserResponse{}, err
+		return dto.LoginUserResponse{}, err
 	}
 
 	if err := bcrypt.CompareHashAndPassword(
@@ -117,10 +120,15 @@ func (s *UserService) LoginUser(email, password string) (dto.UserResponse, error
 		[]byte(password),
 	); err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return dto.UserResponse{}, apperrors.ErrInvalidCredentials
+			return dto.LoginUserResponse{}, apperrors.ErrInvalidCredentials
 		}
 
-		return dto.UserResponse{}, err
+		return dto.LoginUserResponse{}, err
+	}
+
+	tokenResponse, err := s.tokenManager.GenerateToken(user.ID)
+	if err != nil {
+		return dto.LoginUserResponse{}, err
 	}
 
 	userResponse := dto.UserResponse{
@@ -130,5 +138,10 @@ func (s *UserService) LoginUser(email, password string) (dto.UserResponse, error
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	return userResponse, nil
+	loginResponse := dto.LoginUserResponse{
+		User:  userResponse,
+		Token: tokenResponse,
+	}
+
+	return loginResponse, nil
 }
