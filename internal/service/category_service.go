@@ -13,6 +13,7 @@ type CategoryRepository interface {
 	CreateCategory(userID int64, name string) (models.Category, error)
 	GetCategories(userID int64) ([]models.Category, error)
 	UpdateCategory(categoryID int64, userID int64, name string) (models.Category, error)
+	DeleteCategory(categoryID int64, userID int64) error
 }
 
 type CategoryService struct {
@@ -78,4 +79,17 @@ func (s *CategoryService) UpdateCategory(categoryID int64, userID int64, name st
 	}
 
 	return categoryResponseDTO, nil
+}
+
+func (s *CategoryService) DeleteCategory(categoryID int64, userID int64) error {
+	err := s.repo.DeleteCategory(categoryID, userID)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrCategoryNotFound) {
+			return apperrors.ErrCategoryNotFound
+		}
+
+		return err
+	}
+
+	return nil
 }

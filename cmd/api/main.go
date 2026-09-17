@@ -66,6 +66,7 @@ func main() {
 	authorized.POST("/categories", categoryHandler.CreateCategory)
 	authorized.GET("/categories", categoryHandler.GetCategories)
 	authorized.PATCH("/categories/:id", categoryHandler.UpdateCategory)
+	authorized.DELETE("/categories/:id", categoryHandler.DeleteCategory)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)

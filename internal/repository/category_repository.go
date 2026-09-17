@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"expense-tracker/internal/apperrors"
 	"expense-tracker/internal/models"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -106,4 +107,23 @@ func (r *CategoryRepository) UpdateCategory(categoryID int64, userID int64, name
 	}
 
 	return category, nil
+}
+
+func (r *CategoryRepository) DeleteCategory(categoryID int64, userID int64) error {
+	category, err := r.pool.Exec(
+		context.Background(),
+		`DELETE FROM categories
+		WHERE id = $1 AND user_id = $2`,
+		categoryID,
+		userID,
+	)
+	if err != nil {
+		return err
+	}
+
+	if category.RowsAffected() == 0 {
+		return apperrors.ErrCategoryNotFound
+	}
+
+	return nil
 }
