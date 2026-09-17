@@ -80,3 +80,30 @@ func (r *CategoryRepository) GetCategories(userID int64) ([]models.Category, err
 
 	return categories, nil
 }
+
+func (r *CategoryRepository) UpdateCategory(categoryID int64, userID int64, name string) (models.Category, error) {
+	row := r.pool.QueryRow(
+		context.Background(),
+		`UPDATE categories
+		SET name = $1
+		WHERE id = $2 AND user_id = $3
+		RETURNING id, user_id, name, created_at`,
+		name,
+		categoryID,
+		userID,
+	)
+
+	var category models.Category
+
+	err := row.Scan(
+		&category.ID,
+		&category.UserID,
+		&category.Name,
+		&category.CreatedAt,
+	)
+	if err != nil {
+		return models.Category{}, err
+	}
+
+	return category, nil
+}

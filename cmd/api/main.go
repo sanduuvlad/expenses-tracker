@@ -65,6 +65,7 @@ func main() {
 	// AuthRouter
 	authorized.POST("/categories", categoryHandler.CreateCategory)
 	authorized.GET("/categories", categoryHandler.GetCategories)
+	authorized.PATCH("/categories/:id", categoryHandler.UpdateCategory)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)

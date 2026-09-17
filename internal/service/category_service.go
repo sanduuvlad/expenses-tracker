@@ -1,13 +1,18 @@
 package service
 
 import (
+	"errors"
+	"expense-tracker/internal/apperrors"
 	"expense-tracker/internal/dto"
 	"expense-tracker/internal/models"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type CategoryRepository interface {
 	CreateCategory(userID int64, name string) (models.Category, error)
 	GetCategories(userID int64) ([]models.Category, error)
+	UpdateCategory(categoryID int64, userID int64, name string) (models.Category, error)
 }
 
 type CategoryService struct {
@@ -54,4 +59,23 @@ func (s *CategoryService) GetCategories(userID int64) ([]dto.CategoryResponse, e
 	}
 
 	return categoriesResponseDTO, nil
+}
+
+func (s *CategoryService) UpdateCategory(categoryID int64, userID int64, name string) (dto.CategoryResponse, error) {
+	category, err := s.repo.UpdateCategory(categoryID, userID, name)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return dto.CategoryResponse{}, apperrors.ErrCategoryNotFound
+		}
+
+		return dto.CategoryResponse{}, err
+	}
+
+	categoryResponseDTO := dto.CategoryResponse{
+		ID:        category.ID,
+		Name:      category.Name,
+		CreatedAt: category.CreatedAt,
+	}
+
+	return categoryResponseDTO, nil
 }
