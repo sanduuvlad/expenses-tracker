@@ -7,6 +7,7 @@ import (
 
 type CategoryRepository interface {
 	CreateCategory(userID int64, name string) (models.Category, error)
+	GetCategories(userID int64) ([]models.Category, error)
 }
 
 type CategoryService struct {
@@ -32,4 +33,25 @@ func (s *CategoryService) CreateCategory(userID int64, name string) (dto.Categor
 	}
 
 	return categoryDTO, nil
+}
+
+func (s *CategoryService) GetCategories(userID int64) ([]dto.CategoryResponse, error) {
+	categories, err := s.repo.GetCategories(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	categoriesResponseDTO := make([]dto.CategoryResponse, 0)
+
+	for _, value := range categories {
+		categoryDTO := dto.CategoryResponse{
+			ID:        value.ID,
+			Name:      value.Name,
+			CreatedAt: value.CreatedAt,
+		}
+
+		categoriesResponseDTO = append(categoriesResponseDTO, categoryDTO)
+	}
+
+	return categoriesResponseDTO, nil
 }

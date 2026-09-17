@@ -41,3 +41,42 @@ func (r *CategoryRepository) CreateCategory(userID int64, name string) (models.C
 
 	return category, nil
 }
+
+func (r *CategoryRepository) GetCategories(userID int64) ([]models.Category, error) {
+	rows, err := r.pool.Query(
+		context.Background(),
+		`SELECT id, user_id, name, created_at
+		FROM categories
+		WHERE user_id = $1`,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var categories []models.Category
+
+	for rows.Next() {
+		var category models.Category
+
+		err := rows.Scan(
+			&category.ID,
+			&category.UserID,
+			&category.Name,
+			&category.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		categories = append(categories, category)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
