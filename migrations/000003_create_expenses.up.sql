@@ -13,8 +13,8 @@ CREATE TABLE expenses (
     expense_date DATE NOT NULL, 
     expense_description VARCHAR(200),
 
-    created_at TIMESTAMPTZ NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     FOREIGN KEY (user_id)
         REFERENCES users(id),
