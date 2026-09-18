@@ -11,7 +11,7 @@ CREATE TABLE expenses (
     CHECK (currency IN ('MDL', 'EUR', 'USD')),
 
     expense_date DATE NOT NULL, 
-    expense_description VARCHAR(200),
+    expense_description VARCHAR(200) NOT NULL,
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
