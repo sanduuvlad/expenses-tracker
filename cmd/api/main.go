@@ -41,14 +41,17 @@ func main() {
 	// Repository
 	userRepo := repository.NewUserRepository(pool)
 	categoryRepo := repository.NewCategoryRepository(pool)
+	expenseRepo := repository.NewExpenseRepository(pool)
 
 	// Service
 	userService := service.NewUserService(userRepo, tokenManager)
 	categoryService := service.NewCategoryService(categoryRepo)
+	expenseService := service.NewExpenseService(expenseRepo)
 
 	// Handler
 	userHandler := handler.NewUserHandler(userService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
+	expenseHandler := handler.NewExpenseHandler(expenseService)
 
 	// Router
 	router := gin.Default()
@@ -67,6 +70,7 @@ func main() {
 	authorized.GET("/categories", categoryHandler.GetCategories)
 	authorized.PATCH("/categories/:id", categoryHandler.UpdateCategory)
 	authorized.DELETE("/categories/:id", categoryHandler.DeleteCategory)
+	authorized.POST("/expenses", expenseHandler.CreateExpense)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)
