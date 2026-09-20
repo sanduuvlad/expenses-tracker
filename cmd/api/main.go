@@ -71,6 +71,7 @@ func main() {
 	authorized.PATCH("/categories/:id", categoryHandler.UpdateCategory)
 	authorized.DELETE("/categories/:id", categoryHandler.DeleteCategory)
 	authorized.POST("/expenses", expenseHandler.CreateExpense)
+	authorized.GET("/expenses", expenseHandler.GetExpenses)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)

@@ -52,3 +52,46 @@ func (r *ExpenseRepository) CreateExpense(userID int64, categoryID int64, amount
 
 	return expense, nil
 }
+
+func (r *ExpenseRepository) GetExpenses(userID int64) ([]models.Expense, error) {
+	rows, err := r.pool.Query(
+		context.Background(),
+		`SELECT id, user_id, category_id, amount, currency,
+			expense_date, expense_description, created_at, updated_at
+		FROM expenses
+		WHERE user_id = $1`,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var expenses []models.Expense
+
+	for rows.Next() {
+		var expense models.Expense
+
+		err := rows.Scan(
+			&expense.ID,
+			&expense.UserID,
+			&expense.CategoryID,
+			&expense.Amount,
+			&expense.Currency,
+			&expense.ExpenseDate,
+			&expense.ExpenseDescription,
+			&expense.CreatedAt,
+			&expense.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		expenses = append(expenses, expense)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return expenses, nil
+}

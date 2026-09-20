@@ -10,6 +10,7 @@ import (
 
 type ExpenseRepository interface {
 	CreateExpense(userID int64, categoryID int64, amount decimal.Decimal, currency string, expenseDate time.Time, expenseDescription string) (models.Expense, error)
+	GetExpenses(userID int64) ([]models.Expense, error)
 }
 
 type ExpenseService struct {
@@ -40,4 +41,30 @@ func (s *ExpenseService) CreateExpense(userID int64, categoryID int64, amount de
 	}
 
 	return expenseResponseDTO, nil
+}
+
+func (s *ExpenseService) GetExpenses(userID int64) ([]dto.ExpenseResponse, error) {
+	expenses, err := s.repo.GetExpenses(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	expensesResponseDTO := make([]dto.ExpenseResponse, 0)
+
+	for _, value := range expenses {
+		expenseDTO := dto.ExpenseResponse{
+			ID:                 value.ID,
+			CategoryID:         value.CategoryID,
+			Amount:             value.Amount,
+			Currency:           value.Currency,
+			ExpenseDate:        value.ExpenseDate,
+			ExpenseDescription: value.ExpenseDescription,
+			CreatedAt:          value.CreatedAt,
+			UpdatedAt:          value.UpdatedAt,
+		}
+
+		expensesResponseDTO = append(expensesResponseDTO, expenseDTO)
+	}
+
+	return expensesResponseDTO, nil
 }
