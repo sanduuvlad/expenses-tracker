@@ -95,3 +95,34 @@ func (r *ExpenseRepository) GetExpenses(userID int64) ([]models.Expense, error) 
 
 	return expenses, nil
 }
+
+func (r *ExpenseRepository) GetExpenseByID(expenseID int64, userID int64) (models.Expense, error) {
+	row := r.pool.QueryRow(
+		context.Background(),
+		`SELECT id, user_id, category_id, amount, currency,
+			expense_date, expense_description, created_at, updated_at
+		FROM expenses
+		WHERE id = $1 AND user_id = $2`,
+		expenseID,
+		userID,
+	)
+
+	var expense models.Expense
+
+	err := row.Scan(
+		&expense.ID,
+		&expense.UserID,
+		&expense.CategoryID,
+		&expense.Amount,
+		&expense.Currency,
+		&expense.ExpenseDate,
+		&expense.ExpenseDescription,
+		&expense.CreatedAt,
+		&expense.UpdatedAt,
+	)
+	if err != nil {
+		return models.Expense{}, err
+	}
+
+	return expense, nil
+}
