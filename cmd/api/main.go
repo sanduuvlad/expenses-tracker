@@ -73,6 +73,7 @@ func main() {
 	authorized.POST("/expenses", expenseHandler.CreateExpense)
 	authorized.GET("/expenses", expenseHandler.GetExpenses)
 	authorized.GET("/expenses/:id", expenseHandler.GetExpenseByID)
+	authorized.PATCH("/expenses/:id", expenseHandler.UpdateExpense)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)

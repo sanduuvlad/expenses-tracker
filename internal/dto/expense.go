@@ -24,3 +24,11 @@ type ExpenseResponse struct {
 	CreatedAt          time.Time       `json:"created_at"`
 	UpdatedAt          time.Time       `json:"updated_at"`
 }
+
+type UpdateExpenseRequest struct {
+	CategoryID         *int64           `json:"category_id"`
+	Amount             *decimal.Decimal `json:"amount"`
+	Currency           *string          `json:"currency"`
+	ExpenseDate        *time.Time       `json:"expense_date"`
+	ExpenseDescription *string          `json:"expense_description"`
+}
