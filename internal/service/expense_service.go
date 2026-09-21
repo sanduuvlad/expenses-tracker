@@ -16,6 +16,7 @@ type ExpenseRepository interface {
 	GetExpenses(userID int64) ([]models.Expense, error)
 	GetExpenseByID(expenseID int64, userID int64) (models.Expense, error)
 	UpdateExpense(expenseID int64, userID int64, categoryID *int64, amount *decimal.Decimal, currency *string, expenseDate *time.Time, expenseDescription *string) (models.Expense, error)
+	DeleteExpenseByID(expenseID int64, userID int64) error
 }
 
 type ExpenseService struct {
@@ -120,4 +121,17 @@ func (s *ExpenseService) UpdateExpense(expenseID int64, userID int64, categoryID
 	}
 
 	return expenseDTO, nil
+}
+
+func (s *ExpenseService) DeleteExpenseByID(expenseID int64, userID int64) error {
+	err := s.repo.DeleteExpenseByID(expenseID, userID)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrExpenseNotFound) {
+			return apperrors.ErrExpenseNotFound
+		}
+
+		return err
+	}
+
+	return nil
 }

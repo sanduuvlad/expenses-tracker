@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"expense-tracker/internal/apperrors"
 	"expense-tracker/internal/models"
 	"fmt"
 	"strings"
@@ -215,4 +216,23 @@ func (r *ExpenseRepository) UpdateExpense(expenseID int64, userID int64, categor
 	}
 
 	return expense, nil
+}
+
+func (r *ExpenseRepository) DeleteExpenseByID(expenseID int64, userID int64) error {
+	result, err := r.pool.Exec(
+		context.Background(),
+		`DELETE FROM expenses
+		WHERE id = $1 AND user_id = $2`,
+		expenseID,
+		userID,
+	)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return apperrors.ErrExpenseNotFound
+	}
+
+	return nil
 }
