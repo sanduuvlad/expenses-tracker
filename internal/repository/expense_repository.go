@@ -236,3 +236,34 @@ func (r *ExpenseRepository) DeleteExpenseByID(expenseID int64, userID int64) err
 
 	return nil
 }
+
+func (r *ExpenseRepository) GetExpenseStats(userID int64) (models.ExpenseStats, error) {
+	row := r.pool.QueryRow(
+		context.Background(),
+		`SELECT SUM(amount), COUNT(*), AVG(amount)
+		FROM expenses
+		WHERE user_id = $1`,
+		userID,
+	)
+
+	var totalAmount decimal.Decimal
+	var totalExpenses int64
+	var averageAmount decimal.Decimal
+
+	err := row.Scan(
+		&totalAmount,
+		&totalExpenses,
+		&averageAmount,
+	)
+	if err != nil {
+		return models.ExpenseStats{}, err
+	}
+
+	expenseStats := models.ExpenseStats{
+		TotalAmount:   totalAmount,
+		TotalExpenses: totalExpenses,
+		AverageAmount: averageAmount,
+	}
+
+	return expenseStats, nil
+}

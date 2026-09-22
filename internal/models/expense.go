@@ -17,3 +17,9 @@ type Expense struct {
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
 }
+
+type ExpenseStats struct {
+	TotalAmount   decimal.Decimal
+	TotalExpenses int64
+	AverageAmount decimal.Decimal
+}
