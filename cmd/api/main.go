@@ -75,6 +75,7 @@ func main() {
 	authorized.GET("/expenses/:id", expenseHandler.GetExpenseByID)
 	authorized.PATCH("/expenses/:id", expenseHandler.UpdateExpense)
 	authorized.DELETE("/expenses/:id", expenseHandler.DeleteExpenseByID)
+	authorized.GET("/expenses/stats", expenseHandler.GetExpenseStats)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)

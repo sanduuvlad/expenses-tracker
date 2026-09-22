@@ -32,3 +32,9 @@ type UpdateExpenseRequest struct {
 	ExpenseDate        *time.Time       `json:"expense_date"`
 	ExpenseDescription *string          `json:"expense_description"`
 }
+
+type ExpenseStatsResponse struct {
+	TotalAmount   decimal.Decimal `json:"total_amount"`
+	TotalExpenses int64           `json:"total_expenses"`
+	AverageAmount decimal.Decimal `json:"average_amount"`
+}

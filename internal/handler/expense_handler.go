@@ -185,3 +185,25 @@ func (h *ExpenseHandler) DeleteExpenseByID(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+func (h *ExpenseHandler) GetExpenseStats(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		return
+	}
+
+	userIDInt64, ok := userID.(int64)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		return
+	}
+
+	expenseStatsResponse, err := h.service.GetExpenseStats(userIDInt64)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, expenseStatsResponse)
+}
