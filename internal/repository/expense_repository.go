@@ -56,14 +56,42 @@ func (r *ExpenseRepository) CreateExpense(userID int64, categoryID int64, amount
 	return expense, nil
 }
 
-func (r *ExpenseRepository) GetExpenses(userID int64) ([]models.Expense, error) {
-	rows, err := r.pool.Query(
-		context.Background(),
-		`SELECT id, user_id, category_id, amount, currency,
+func (r *ExpenseRepository) GetExpenses(userID int64, currency string, categoryID *int64) ([]models.Expense, error) {
+	var whereParts []string
+
+	var args []any
+
+	whereParts = append(whereParts, "user_id = $1")
+	args = append(args, userID)
+
+	if currency != "" {
+		counter := len(args) + 1
+
+		whereParts = append(whereParts, fmt.Sprintf("currency = $%d", counter))
+		args = append(args, currency)
+	}
+
+	if categoryID != nil {
+		counter := len(args) + 1
+
+		whereParts = append(whereParts, fmt.Sprintf("category_id = $%d", counter))
+		args = append(args, *categoryID)
+	}
+
+	whereJoin := strings.Join(whereParts, " AND ")
+
+	query := fmt.Sprintf(`
+		SELECT id, user_id, category_id, amount, currency,
 			expense_date, expense_description, created_at, updated_at
 		FROM expenses
-		WHERE user_id = $1`,
-		userID,
+		WHERE %s`,
+		whereJoin,
+	)
+
+	rows, err := r.pool.Query(
+		context.Background(),
+		query,
+		args...,
 	)
 	if err != nil {
 		return nil, err

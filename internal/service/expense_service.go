@@ -13,7 +13,7 @@ import (
 
 type ExpenseRepository interface {
 	CreateExpense(userID int64, categoryID int64, amount decimal.Decimal, currency string, expenseDate time.Time, expenseDescription string) (models.Expense, error)
-	GetExpenses(userID int64) ([]models.Expense, error)
+	GetExpenses(userID int64, currency string, categoryID *int64) ([]models.Expense, error)
 	GetExpenseByID(expenseID int64, userID int64) (models.Expense, error)
 	UpdateExpense(expenseID int64, userID int64, categoryID *int64, amount *decimal.Decimal, currency *string, expenseDate *time.Time, expenseDescription *string) (models.Expense, error)
 	DeleteExpenseByID(expenseID int64, userID int64) error
@@ -50,8 +50,8 @@ func (s *ExpenseService) CreateExpense(userID int64, categoryID int64, amount de
 	return expenseResponseDTO, nil
 }
 
-func (s *ExpenseService) GetExpenses(userID int64) ([]dto.ExpenseResponse, error) {
-	expenses, err := s.repo.GetExpenses(userID)
+func (s *ExpenseService) GetExpenses(userID int64, currency string, categoryID *int64) ([]dto.ExpenseResponse, error) {
+	expenses, err := s.repo.GetExpenses(userID, currency, categoryID)
 	if err != nil {
 		return nil, err
 	}
