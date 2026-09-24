@@ -64,7 +64,22 @@ func (h *ExpenseHandler) GetExpenses(c *gin.Context) {
 		return
 	}
 
-	expensesResponse, err := h.service.GetExpenses(userIDInt64)
+	currencyRequest := c.Query("currency")
+	categoryID := c.Query("category_id")
+
+	var categoryIDInt64 *int64
+
+	if categoryID != "" {
+		parsedCategoryID, err := strconv.ParseInt(categoryID, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+			return
+		}
+
+		categoryIDInt64 = &parsedCategoryID
+	}
+
+	expensesResponse, err := h.service.GetExpenses(userIDInt64, currencyRequest, categoryIDInt64)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
