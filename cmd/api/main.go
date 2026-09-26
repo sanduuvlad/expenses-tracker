@@ -42,16 +42,19 @@ func main() {
 	userRepo := repository.NewUserRepository(pool)
 	categoryRepo := repository.NewCategoryRepository(pool)
 	expenseRepo := repository.NewExpenseRepository(pool)
+	budgetRepo := repository.NewBudgetRepository(pool)
 
 	// Service
 	userService := service.NewUserService(userRepo, tokenManager)
 	categoryService := service.NewCategoryService(categoryRepo)
 	expenseService := service.NewExpenseService(expenseRepo)
+	budgetService := service.NewBudgetService(budgetRepo)
 
 	// Handler
 	userHandler := handler.NewUserHandler(userService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 	expenseHandler := handler.NewExpenseHandler(expenseService)
+	budgetHandler := handler.NewBudgetHandler(budgetService)
 
 	// Router
 	router := gin.Default()
@@ -76,6 +79,7 @@ func main() {
 	authorized.PATCH("/expenses/:id", expenseHandler.UpdateExpense)
 	authorized.DELETE("/expenses/:id", expenseHandler.DeleteExpenseByID)
 	authorized.GET("/expenses/stats", expenseHandler.GetExpenseStats)
+	authorized.POST("/budgets", budgetHandler.CreateHandler)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)
