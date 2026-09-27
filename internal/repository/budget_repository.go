@@ -50,3 +50,44 @@ func (r *BudgetRepository) CreateBudget(userID int64, categoryID int64, currency
 
 	return budget, nil
 }
+
+func (r *BudgetRepository) GetAllBudgets(userID int64) ([]models.Budget, error) {
+	rows, err := r.pool.Query(
+		context.Background(),
+		`SELECT id, user_id, category_id, currency,
+			budget_limit, period_start, period_end
+		FROM budgets
+		WHERE user_id = $1`,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var budgets []models.Budget
+
+	for rows.Next() {
+		var budget models.Budget
+
+		err := rows.Scan(
+			&budget.ID,
+			&budget.UserID,
+			&budget.CategoryID,
+			&budget.Currency,
+			&budget.BudgetLimit,
+			&budget.PeriodStart,
+			&budget.PeriodEnd,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		budgets = append(budgets, budget)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return budgets, nil
+}

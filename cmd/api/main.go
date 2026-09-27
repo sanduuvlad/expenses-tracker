@@ -80,6 +80,7 @@ func main() {
 	authorized.DELETE("/expenses/:id", expenseHandler.DeleteExpenseByID)
 	authorized.GET("/expenses/stats", expenseHandler.GetExpenseStats)
 	authorized.POST("/budgets", budgetHandler.CreateHandler)
+	authorized.GET("/budgets", budgetHandler.GetAllBudgets)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)

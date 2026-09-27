@@ -17,6 +17,7 @@ var allowedCurrencies = map[string]struct{}{
 
 type BudgetRepository interface {
 	CreateBudget(userID int64, categoryID int64, currency string, budgetLimit decimal.Decimal, periodStart time.Time, periodEnd time.Time) (models.Budget, error)
+	GetAllBudgets(userID int64) ([]models.Budget, error)
 }
 
 type BudgetService struct {
@@ -58,4 +59,28 @@ func (s *BudgetService) CreateBudget(userID int64, categoryID int64, currency st
 	}
 
 	return budgetResponseDTO, nil
+}
+
+func (s *BudgetService) GetAllBudgets(userID int64) ([]dto.BudgetResponse, error) {
+	budgets, err := s.repo.GetAllBudgets(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var budgetsDTO = make([]dto.BudgetResponse, 0)
+
+	for _, value := range budgets {
+		budgetDTO := dto.BudgetResponse{
+			ID:          value.ID,
+			CategoryID:  value.CategoryID,
+			Currency:    value.Currency,
+			BudgetLimit: value.BudgetLimit,
+			PeriodStart: value.PeriodStart,
+			PeriodEnd:   value.PeriodEnd,
+		}
+
+		budgetsDTO = append(budgetsDTO, budgetDTO)
+	}
+
+	return budgetsDTO, nil
 }
