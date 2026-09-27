@@ -1,11 +1,13 @@
 package service
 
 import (
+	"errors"
 	"expense-tracker/internal/apperrors"
 	"expense-tracker/internal/dto"
 	"expense-tracker/internal/models"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/shopspring/decimal"
 )
 
@@ -18,6 +20,7 @@ var allowedCurrencies = map[string]struct{}{
 type BudgetRepository interface {
 	CreateBudget(userID int64, categoryID int64, currency string, budgetLimit decimal.Decimal, periodStart time.Time, periodEnd time.Time) (models.Budget, error)
 	GetAllBudgets(userID int64) ([]models.Budget, error)
+	GetBudgetByID(budgetID int64, userID int64) (models.Budget, error)
 }
 
 type BudgetService struct {
@@ -83,4 +86,26 @@ func (s *BudgetService) GetAllBudgets(userID int64) ([]dto.BudgetResponse, error
 	}
 
 	return budgetsDTO, nil
+}
+
+func (s *BudgetService) GetBudgetByID(budgetID int64, userID int64) (dto.BudgetResponse, error) {
+	budget, err := s.repo.GetBudgetByID(budgetID, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return dto.BudgetResponse{}, apperrors.ErrBudgetNotFound
+		}
+
+		return dto.BudgetResponse{}, err
+	}
+
+	budgetDTO := dto.BudgetResponse{
+		ID:          budget.ID,
+		CategoryID:  budget.CategoryID,
+		Currency:    budget.Currency,
+		BudgetLimit: budget.BudgetLimit,
+		PeriodStart: budget.PeriodStart,
+		PeriodEnd:   budget.PeriodEnd,
+	}
+
+	return budgetDTO, nil
 }

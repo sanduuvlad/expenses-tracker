@@ -6,6 +6,7 @@ import (
 	"expense-tracker/internal/dto"
 	"expense-tracker/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -84,4 +85,39 @@ func (h *BudgetHandler) GetAllBudgets(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, budgetsResponse)
+}
+
+func (h *BudgetHandler) GetBudgetByID(c *gin.Context) {
+	budgetIDStr := c.Param("id")
+
+	budgetID, err := strconv.ParseInt(budgetIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+		return
+	}
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		return
+	}
+
+	userIDInt64, ok := userID.(int64)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		return
+	}
+
+	budgetResponse, err := h.service.GetBudgetByID(budgetID, userIDInt64)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrBudgetNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "budget not found"})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, budgetResponse)
 }

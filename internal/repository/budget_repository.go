@@ -91,3 +91,32 @@ func (r *BudgetRepository) GetAllBudgets(userID int64) ([]models.Budget, error) 
 
 	return budgets, nil
 }
+
+func (r *BudgetRepository) GetBudgetByID(budgetID int64, userID int64) (models.Budget, error) {
+	row := r.pool.QueryRow(
+		context.Background(),
+		`SELECT id, user_id, category_id, currency,
+			budget_limit, period_start, period_end
+		FROM budgets
+		WHERE id = $1 AND user_id = $2`,
+		budgetID,
+		userID,
+	)
+
+	var budget models.Budget
+
+	err := row.Scan(
+		&budget.ID,
+		&budget.UserID,
+		&budget.CategoryID,
+		&budget.Currency,
+		&budget.BudgetLimit,
+		&budget.PeriodStart,
+		&budget.PeriodEnd,
+	)
+	if err != nil {
+		return models.Budget{}, err
+	}
+
+	return budget, nil
+}
