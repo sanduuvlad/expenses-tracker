@@ -1,0 +1,161 @@
+package service
+
+import (
+	"errors"
+	"expense-tracker/internal/apperrors"
+	"expense-tracker/internal/dto"
+	"expense-tracker/internal/models"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/shopspring/decimal"
+)
+
+var allowedCurrencies = map[string]struct{}{
+	"MDL": {},
+	"EUR": {},
+	"USD": {},
+}
+
+type BudgetRepository interface {
+	CreateBudget(userID int64, categoryID int64, currency string, budgetLimit decimal.Decimal, periodStart time.Time, periodEnd time.Time) (models.Budget, error)
+	GetAllBudgets(userID int64) ([]models.Budget, error)
+	GetBudgetByID(budgetID int64, userID int64) (models.Budget, error)
+	UpdateBudget(budgetID int64, userID int64, categoryID int64, currency string, budgetLimit decimal.Decimal, periodStart time.Time, periodEnd time.Time) (models.Budget, error)
+	DeleteBudget(budgetID int64, userID int64) error
+}
+
+type BudgetService struct {
+	repo BudgetRepository
+}
+
+func NewBudgetService(budgetService BudgetRepository) *BudgetService {
+	return &BudgetService{
+		repo: budgetService,
+	}
+}
+
+func (s *BudgetService) CreateBudget(userID int64, categoryID int64, currency string, budgetLimit decimal.Decimal, periodStart time.Time, periodEnd time.Time) (dto.BudgetResponse, error) {
+	if budgetLimit.LessThanOrEqual(decimal.Zero) {
+		return dto.BudgetResponse{}, apperrors.ErrInvalidBudgetLimit
+	}
+
+	if periodStart.After(periodEnd) {
+		return dto.BudgetResponse{}, apperrors.ErrInvalidPeriod
+	}
+
+	_, ok := allowedCurrencies[currency]
+	if !ok {
+		return dto.BudgetResponse{}, apperrors.ErrInvalidCurrency
+	}
+
+	budgetResponse, err := s.repo.CreateBudget(userID, categoryID, currency, budgetLimit, periodStart, periodEnd)
+	if err != nil {
+		return dto.BudgetResponse{}, err
+	}
+
+	budgetResponseDTO := dto.BudgetResponse{
+		ID:          budgetResponse.ID,
+		CategoryID:  budgetResponse.CategoryID,
+		Currency:    budgetResponse.Currency,
+		BudgetLimit: budgetResponse.BudgetLimit,
+		PeriodStart: budgetResponse.PeriodStart,
+		PeriodEnd:   budgetResponse.PeriodEnd,
+	}
+
+	return budgetResponseDTO, nil
+}
+
+func (s *BudgetService) GetAllBudgets(userID int64) ([]dto.BudgetResponse, error) {
+	budgets, err := s.repo.GetAllBudgets(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var budgetsDTO = make([]dto.BudgetResponse, 0)
+
+	for _, value := range budgets {
+		budgetDTO := dto.BudgetResponse{
+			ID:          value.ID,
+			CategoryID:  value.CategoryID,
+			Currency:    value.Currency,
+			BudgetLimit: value.BudgetLimit,
+			PeriodStart: value.PeriodStart,
+			PeriodEnd:   value.PeriodEnd,
+		}
+
+		budgetsDTO = append(budgetsDTO, budgetDTO)
+	}
+
+	return budgetsDTO, nil
+}
+
+func (s *BudgetService) GetBudgetByID(budgetID int64, userID int64) (dto.BudgetResponse, error) {
+	budget, err := s.repo.GetBudgetByID(budgetID, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return dto.BudgetResponse{}, apperrors.ErrBudgetNotFound
+		}
+
+		return dto.BudgetResponse{}, err
+	}
+
+	budgetDTO := dto.BudgetResponse{
+		ID:          budget.ID,
+		CategoryID:  budget.CategoryID,
+		Currency:    budget.Currency,
+		BudgetLimit: budget.BudgetLimit,
+		PeriodStart: budget.PeriodStart,
+		PeriodEnd:   budget.PeriodEnd,
+	}
+
+	return budgetDTO, nil
+}
+
+func (s *BudgetService) UpdateBudget(budgetID int64, userID int64, categoryID int64, currency string, budgetLimit decimal.Decimal, periodStart time.Time, periodEnd time.Time) (dto.BudgetResponse, error) {
+	if budgetLimit.LessThanOrEqual(decimal.Zero) {
+		return dto.BudgetResponse{}, apperrors.ErrInvalidBudgetLimit
+	}
+
+	if periodStart.After(periodEnd) {
+		return dto.BudgetResponse{}, apperrors.ErrInvalidPeriod
+	}
+
+	_, ok := allowedCurrencies[currency]
+	if !ok {
+		return dto.BudgetResponse{}, apperrors.ErrInvalidCurrency
+	}
+
+	budgetUpdate, err := s.repo.UpdateBudget(budgetID, userID, categoryID, currency, budgetLimit, periodStart, periodEnd)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return dto.BudgetResponse{}, apperrors.ErrBudgetNotFound
+		}
+
+		return dto.BudgetResponse{}, err
+	}
+
+	budgetDTO := dto.BudgetResponse{
+		ID:          budgetUpdate.ID,
+		CategoryID:  budgetUpdate.CategoryID,
+		Currency:    budgetUpdate.Currency,
+		BudgetLimit: budgetUpdate.BudgetLimit,
+		PeriodStart: budgetUpdate.PeriodStart,
+		PeriodEnd:   budgetUpdate.PeriodEnd,
+	}
+
+	return budgetDTO, nil
+}
+
+func (s *BudgetService) DeleteBudget(budgetID int64, userID int64) error {
+	err := s.repo.DeleteBudget(budgetID, userID)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrBudgetNotFound) {
+			return apperrors.ErrBudgetNotFound
+		}
+
+		return err
+	}
+
+	return nil
+}
