@@ -22,6 +22,7 @@ type BudgetRepository interface {
 	GetAllBudgets(userID int64) ([]models.Budget, error)
 	GetBudgetByID(budgetID int64, userID int64) (models.Budget, error)
 	UpdateBudget(budgetID int64, userID int64, categoryID int64, currency string, budgetLimit decimal.Decimal, periodStart time.Time, periodEnd time.Time) (models.Budget, error)
+	DeleteBudget(budgetID int64, userID int64) error
 }
 
 type BudgetService struct {
@@ -144,4 +145,17 @@ func (s *BudgetService) UpdateBudget(budgetID int64, userID int64, categoryID in
 	}
 
 	return budgetDTO, nil
+}
+
+func (s *BudgetService) DeleteBudget(budgetID int64, userID int64) error {
+	err := s.repo.DeleteBudget(budgetID, userID)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrBudgetNotFound) {
+			return apperrors.ErrBudgetNotFound
+		}
+
+		return err
+	}
+
+	return nil
 }

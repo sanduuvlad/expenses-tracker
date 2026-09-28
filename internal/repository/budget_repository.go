@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"expense-tracker/internal/apperrors"
 	"expense-tracker/internal/models"
 	"time"
 
@@ -155,4 +156,23 @@ func (r *BudgetRepository) UpdateBudget(budgetID int64, userID int64, categoryID
 
 	return budgetUpdate, nil
 
+}
+
+func (r *BudgetRepository) DeleteBudget(budgetID int64, userID int64) error {
+	result, err := r.pool.Exec(
+		context.Background(),
+		`DELETE FROM budgets
+		WHERE id = $1 AND user_id = $2`,
+		budgetID,
+		userID,
+	)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return apperrors.ErrBudgetNotFound
+	}
+
+	return nil
 }

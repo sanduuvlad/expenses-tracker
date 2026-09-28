@@ -83,6 +83,7 @@ func main() {
 	authorized.GET("/budgets", budgetHandler.GetAllBudgets)
 	authorized.GET("/budgets/:id", budgetHandler.GetBudgetByID)
 	authorized.PUT("/budgets/:id", budgetHandler.UpdateBudget)
+	authorized.DELETE("/budgets/:id", budgetHandler.DeleteBudget)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.Server.Port)
