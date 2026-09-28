@@ -21,6 +21,7 @@ type BudgetRepository interface {
 	CreateBudget(userID int64, categoryID int64, currency string, budgetLimit decimal.Decimal, periodStart time.Time, periodEnd time.Time) (models.Budget, error)
 	GetAllBudgets(userID int64) ([]models.Budget, error)
 	GetBudgetByID(budgetID int64, userID int64) (models.Budget, error)
+	UpdateBudget(budgetID int64, userID int64, categoryID int64, currency string, budgetLimit decimal.Decimal, periodStart time.Time, periodEnd time.Time) (models.Budget, error)
 }
 
 type BudgetService struct {
@@ -105,6 +106,41 @@ func (s *BudgetService) GetBudgetByID(budgetID int64, userID int64) (dto.BudgetR
 		BudgetLimit: budget.BudgetLimit,
 		PeriodStart: budget.PeriodStart,
 		PeriodEnd:   budget.PeriodEnd,
+	}
+
+	return budgetDTO, nil
+}
+
+func (s *BudgetService) UpdateBudget(budgetID int64, userID int64, categoryID int64, currency string, budgetLimit decimal.Decimal, periodStart time.Time, periodEnd time.Time) (dto.BudgetResponse, error) {
+	if budgetLimit.LessThanOrEqual(decimal.Zero) {
+		return dto.BudgetResponse{}, apperrors.ErrInvalidBudgetLimit
+	}
+
+	if periodStart.After(periodEnd) {
+		return dto.BudgetResponse{}, apperrors.ErrInvalidPeriod
+	}
+
+	_, ok := allowedCurrencies[currency]
+	if !ok {
+		return dto.BudgetResponse{}, apperrors.ErrInvalidCurrency
+	}
+
+	budgetUpdate, err := s.repo.UpdateBudget(budgetID, userID, categoryID, currency, budgetLimit, periodStart, periodEnd)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return dto.BudgetResponse{}, apperrors.ErrBudgetNotFound
+		}
+
+		return dto.BudgetResponse{}, err
+	}
+
+	budgetDTO := dto.BudgetResponse{
+		ID:          budgetUpdate.ID,
+		CategoryID:  budgetUpdate.CategoryID,
+		Currency:    budgetUpdate.Currency,
+		BudgetLimit: budgetUpdate.BudgetLimit,
+		PeriodStart: budgetUpdate.PeriodStart,
+		PeriodEnd:   budgetUpdate.PeriodEnd,
 	}
 
 	return budgetDTO, nil

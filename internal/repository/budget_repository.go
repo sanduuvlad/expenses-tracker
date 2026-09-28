@@ -120,3 +120,39 @@ func (r *BudgetRepository) GetBudgetByID(budgetID int64, userID int64) (models.B
 
 	return budget, nil
 }
+
+func (r *BudgetRepository) UpdateBudget(budgetID int64, userID int64, categoryID int64, currency string, budgetLimit decimal.Decimal, periodStart time.Time, periodEnd time.Time) (models.Budget, error) {
+	row := r.pool.QueryRow(
+		context.Background(),
+		`UPDATE budgets
+		SET category_id = $1, currency = $2, budget_limit = $3, 
+			period_start = $4, period_end = $5
+		WHERE id = $6 AND user_id = $7
+		RETURNING id, user_id, category_id, currency, budget_limit, period_start, period_end`,
+		categoryID,
+		currency,
+		budgetLimit,
+		periodStart,
+		periodEnd,
+		budgetID,
+		userID,
+	)
+
+	var budgetUpdate models.Budget
+
+	err := row.Scan(
+		&budgetUpdate.ID,
+		&budgetUpdate.UserID,
+		&budgetUpdate.CategoryID,
+		&budgetUpdate.Currency,
+		&budgetUpdate.BudgetLimit,
+		&budgetUpdate.PeriodStart,
+		&budgetUpdate.PeriodEnd,
+	)
+	if err != nil {
+		return models.Budget{}, err
+	}
+
+	return budgetUpdate, nil
+
+}
